@@ -142,7 +142,6 @@ body {
 .caputer {
 	width: 628px;
 	height: 480px;
-	background-color: blue;
 	margin: 0px auto;
 }
 
@@ -181,7 +180,7 @@ body {
 	cursor: pointer;
 }
 
-.current_status {
+.course_status .current_status {
 	background-color: #099cd6;
 }
 

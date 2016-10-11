@@ -24,7 +24,7 @@
   var videoDevices = [];
   var capturerMute = false;
   var dlgId = -1;
-  var cameraPos = 0;
+  var cameraPos = 2;
   var closeEventObId = '';
   var previewVisible = true;
 
@@ -42,7 +42,7 @@
 
   function createCapturer() {
     nativeBridge.createWidget("capturer",
-    {source: "camera", pos: {x: 0, y: 30, width: 480, height: 270}, streamId: "test_003"},
+    {source: "camera", pos: {x: 344, y: 52, width: 640, height: 480}, streamId: "test_003"},
     function (args) {
       myLog(args.id);
       if (args.error == 0) {
@@ -66,7 +66,7 @@
   function createScreenCapturer() {
     nativeBridge.createWidget("capturer", {
       source: "screen",
-      pos: {x: 50, y: 50, width: 480, height: 270},
+      pos: {x: 344, y: 52, width: 640, height: 480},
       streamId: "test5"
     }, function (args) {
       myLog(JSON.stringify(args));
@@ -77,11 +77,16 @@
     });
   }
 
+  function createDouble() {
+    createScreenCapturer(); 
+    createCapturer();
+  }
+
   function createScreenWithCameraCapturer() {
     nativeBridge.createWidget(
       "capturer",
       {source: "screenWithCamera",
-      pos: {x: 100, y: 50, width: 480, height: 270},
+      pos: {x: 344, y: 52, width: 640, height: 480},
       cameraAtScreenPosition: cameraPos,
       streamId: "test5"}, function (args) {
         myLog(JSON.stringify(args));
@@ -505,7 +510,11 @@ function myLog(log) {
       $('.course_list').height(courseListHeight-25);
     }
 
+
+    var courseStatus = false;
+
     $(document).on('click', '.course_title', function() {
+
       var $expandEle = $(this).children('.expand');
       var $listEle = $(this).siblings('.course_list');
       $('.expand').removeClass('do_expand');
@@ -519,25 +528,63 @@ function myLog(log) {
         $expandEle.addClass('do_expand');
         $listEle.show();
       }
+
     }).on('click', '.course_list li', function() {
+
       var liveStr = '<span class="living">直播中</span>';
       $(this).children('.list_item').width($(this).width() - 50);
       $(this).append(liveStr)
+
     }).on('click', '.doing', function() {
-      createScreenWithCameraCapturer();
-      $(this).addClass('current_status');
-      $('done').removeClass('current_status');
+
+      var liveFunction = $('#function_select').val(); 
+      var liveStr = ''
+       
+      if (!courseStatus) {
+        switch(liveFunction) {
+          case 'avo' : createScreenWithCameraCapturer(); break;
+          case 'ao' : createScreenCapturer(); break;
+          case 'vo' : createCapturer(); break;
+        }
+      }
+
+      switch(liveFunction) {
+        case 'avo' : liveStr = '电脑屏幕+摄像头'; break;
+        case 'ao' : liveStr = '电脑屏幕'; break;
+        case 'vo' : liveStr = '摄像头'; break;
+      }
+
+      var replay = confirm('如果要改变直播模式，请选择下面的直播源模式进行切换，确定以当前<<<' + liveStr + '>>>模式进行上课吗？');
+      if (replay) {
+        $(this).addClass('current_status');
+        $('.done').removeClass('current_status');
+      } else {
+        destroyCapturer();
+      }
+
     }).on('click', '.done', function() {
-      destroyCapturer();
-      $(this).addClass('current_status');
-      $('doing').removeClass('current_status');
+
+      var replay = confirm('确定授课全部结束，要下课生成回放吗？');
+      if (replay) {
+        destroyCapturer();
+        $(this).addClass('current_status');
+        $('.doing').removeClass('current_status');
+      }
+
+    }).on('change', '#function_select', function() {
+
+        var liveFunction = $(this).val();
+        courseStatus = true;
+        destroyCapturer();
+        window.setTimeout(function(){
+          switch(liveFunction) {
+            case 'avo' : createScreenWithCameraCapturer(); break;
+            case 'ao' : createScreenCapturer(); break;
+            case 'vo' : createCapturer(); break;
+          }
+        }, 500)
+        
     });
-
-    $('#function_select').change(function(event) {
-      console.log($(this).val())
-    });
-
-
 
   });
   
