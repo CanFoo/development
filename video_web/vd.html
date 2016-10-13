@@ -467,11 +467,10 @@ function myLog(log) {
         </div>
         <div class="video_control">
             <div class="time">
-              <span>1:30:05</span>  
+              <span>0:0:0</span>  
             </div>
             <div class="course_status fr">
-              <span class="done">下课</span>
-              <span class="doing">上课</span>
+              <span class="doing doing_status">上课</span>
             </div>
         </div>
       </div>
@@ -513,6 +512,7 @@ function myLog(log) {
 
     var courseStatus = false;
     var doingFlag = false;
+    var doneFlag = false;
     var showTime = {
         sec : 0,
         min : 0,
@@ -572,8 +572,13 @@ function myLog(log) {
 
       var liveFunction = $('#function_select').val(); 
       var liveStr = ''
+
+      if (doneFlag) {
+        alert('直播课程已结束');
+        return false;
+      }
        
-      if (!courseStatus && !doingFlag) {
+      if (!doingFlag) {
         switch(liveFunction) {
           case 'avo' : createScreenWithCameraCapturer(); break;
           case 'ao' : createScreenCapturer(); break;
@@ -587,37 +592,30 @@ function myLog(log) {
         case 'vo' : liveStr = '摄像头'; break;
       }
 
-      if (!doingFlag) {
+      if (courseStatus === false) {
         var replay = confirm('如果要改变直播模式，请选择下面的直播源模式进行切换，确定以当前<<<' + liveStr + '>>>模式进行上课吗？');
         if (replay) {
+          courseStatus = true;
           doingFlag = true;
           showTime.timer = setInterval(showTime.show, 1000);
-          $(this).addClass('current_status');
-          $('.done').removeClass('current_status');
+          $(this).removeClass('doing_status').html('下课');
         } else {
           destroyCapturer();
         }
       } else {
-        alert('已经在上课了');
-      }
-
-    }).on('click', '.done', function() {
-
-      var replay = confirm('确定授课全部结束，要下课生成回放吗？');
-      if (replay) {
-        doingFlag = false;
-        courseStatus = false;
-        clearInterval(showTime.timer);
-        destroyCapturer();
-        $(this).addClass('current_status');
-        $('.doing').removeClass('current_status');
+        var replay = confirm('确定授课全部结束，要下课生成回放吗？');
+        if (replay) {
+          doneFlag = true;
+          $(this).html('课程已结束');
+          clearInterval(showTime.timer);
+          destroyCapturer();
+        }
       }
 
     }).on('change', '#function_select', function() {
-
         var liveFunction = $(this).val();
-        courseStatus = true;
         destroyCapturer();
+        doingFlag = true;
         window.setTimeout(function(){
           switch(liveFunction) {
             case 'avo' : createScreenWithCameraCapturer(); break;
